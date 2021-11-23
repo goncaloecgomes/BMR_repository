@@ -1,8 +1,9 @@
 import cv2 as cv
 import numpy as np
+import pyvisgraph as vg
 
 
-image = cv.imread("poligonos2.png")
+image = cv.imread("poligons3.png")
 gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 gray_blur = cv.GaussianBlur(gray, (3,3), 0) 
 edges = cv.Canny(gray_blur,100,200)
@@ -65,9 +66,10 @@ def find_centroids(dst):
 
 gray = np.float32(gray)
 
-dst = cv.cornerHarris(gray, 3, 3, 0.04)
+dst1 = cv.cornerHarris(gray, 3, 3, 0.04)
 
-dst = cv.dilate(dst, None)
+dst = cv.dilate(dst1, None)
+
 
 # Threshold for an optimal value, it may vary depending on the image.
 # image[dst > 0.01*dst.max()] = [0, 0, 255]
@@ -101,12 +103,22 @@ for element in poly_list:
     print(element)
     print("\n\n")
 
+vg_poly = []
+vg_poly_list= []
 
+for poly in poly_list:
+    for coord in poly:
+        vg_poly.append(vg.Point(coord[0], coord[1]))
+    vg_poly_list.append(vg_poly)
+    vg_poly = []
 
+g = vg.VisGraph()
+g.build(vg_poly_list)
+shortest = g.shortest_path(vg.Point(10,10), vg.Point(200,200))
 
+print("\n\n")
+print(shortest)
 
-
-
-cv.imshow('dst', image)
+cv.imshow('dst', dst)
 cv.waitKey(0)
 cv.destroyAllWindows()
