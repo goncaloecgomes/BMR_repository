@@ -30,6 +30,8 @@ def coord_corners (image):
 
     gray = np.float32(gray)
 
+    #gray = cv2.GaussianBlur(gray,(9,9),0)
+
     dst = cv2.cornerHarris(gray, 3, 3, 0.04)
 
     dst = cv2.dilate(dst, None)
