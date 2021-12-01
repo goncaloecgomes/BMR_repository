@@ -79,11 +79,11 @@ class TestVisGraphMethods:
         assert self.destination not in self.world.graph
 
     def test_update(self):
-        self.world.update([self.origin, self.destination])
+        self.world.update([self.origin, self.destination],,,
         assert self.origin in self.world.visgraph
         assert self.destination in self.world.visgraph
 
     def test_update_not_update_graph(self):
-        self.world.update([self.origin, self.destination])
+        self.world.update([self.origin, self.destination],,,
         assert self.origin not in self.world.graph
         assert self.destination not in self.world.graph

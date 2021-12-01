@@ -4,6 +4,7 @@ import pyvisgraph_master.pyvisgraph as vg
 import corner as cn
 import Polygon as poly
 import video as vd
+import Kalman as kal
 
 #----------------------------------------------------------------------------------------------------------------
 #    FIND SHORTEST PATH
@@ -68,3 +69,36 @@ cv.waitKey(0)
 # # cv.imshow('dst', frame)
 # # cv.waitKey(0)
 # # cv.destroyAllWindows()
+
+#----------------------------------------------------------------------------------------------------------------
+#   KALMAN FILTER PART
+#----------------------------------------------------------------------------------------------------------------
+
+#  initial conditions
+xdot = 0
+ydot = 0
+ts = 0.1  # time step
+
+#  estimation errors, we should calculate these from the data gathered
+error_est_x = 20
+error_est_xdot = 5
+error_est_y = 20
+error_est_ydot = 5
+
+#  observation errors, we should calculate these from the data gathered
+error_obs_x = 25
+error_obs_xdot = 6
+error_obs_y = 25
+error_obs_ydot = 6
+
+#  Initial Estimation Covariance Matrix
+P = kal.covariance(error_est_x, error_est_xdot, error_est_y, error_est_ydot)
+
+#  Initial State Matrix
+X = np.array([[z[0][0]],
+              [z[1][0]]])
+
+
+
+
+
