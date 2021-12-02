@@ -75,30 +75,24 @@ cv.waitKey(0)
 #----------------------------------------------------------------------------------------------------------------
 
 #  initial conditions
-xdot = 0
-ydot = 0
-ts = 0.1  # time step
+X_est = np.array([[4000],   # x position
+                  [280],    # x velocity
+                  [4000],    # y position
+                  [280]])  # y velocity
 
-#  estimation errors, we should calculate these from the data gathered
-error_est_x = 20
-error_est_xdot = 5
-error_est_y = 20
-error_est_ydot = 5
+P_est = kal.covariance(20, 5, 20, 5)  # state covariance matrix
 
-#  observation errors, we should calculate these from the data gathered
-error_obs_x = 25
-error_obs_xdot = 6
-error_obs_y = 25
-error_obs_ydot = 6
+Q = kal.covariance(20, 5, 20, 5)  # process noise covariance matrix
 
-#  Initial Estimation Covariance Matrix
-P = kal.covariance(error_est_x, error_est_xdot, error_est_y, error_est_ydot)
+R = kal.covariance(25, 6, 25, 6)  # measurement covariance matrix
 
-#  Initial State Matrix
-X = np.array([[z[0][0]],
-              [z[1][0]]])
+#  some test observations
+x_obs = np.array([4000, 4260, 4550, 4860, 5110])
+xdot_obs = np.array([280, 282, 285, 286, 290])
+y_obs = np.array([4000, 4260, 4550, 4860, 5110])
+ydot_obs = np.array([280, 282, 285, 286, 290])
 
-
-
-
-
+# example loop taking the test observations and the previous state to update the current state
+for i in range(len(x_obs)):
+    X_est, P_est = kal.kalman_filter(X_est, P_est, Q, R, x_obs[i], xdot_obs[i], y_obs[i], ydot_obs[i])
+    print(X_est)
