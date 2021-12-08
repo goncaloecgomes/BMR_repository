@@ -96,6 +96,3 @@ class Local_Nav:
             leds_top[2] = 32
             return {"leds.top": [0, 0, 32]}
 
-        # self.client.aw(node.lock_node())
-        # self.node.var_to_send
-        # self.node.flush()

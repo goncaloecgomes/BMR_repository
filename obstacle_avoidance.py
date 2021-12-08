@@ -15,25 +15,20 @@ motor_speed_right = cruisin
 # Define local_nav object with class attributes
 local_nav = LN.Local_Nav(client, node, motor_speed_left, motor_speed_right)
 
-
+# Store motor speeds in right format to update nodes
 client.aw(node.lock_node())
 cruise_speed = local_nav.motors(100,100)
 stop = local_nav.motors(0,0)
-print("My man, our cruise speed is: ", cruise_speed)
 
-node.flush()
-
+# Test Local Navigation Class
 counter = 1
 while counter < 1000:
 
-    node = client.aw(client.wait_for_node())
-    data = local_nav.get_sensor_data()
-    flag = local_nav.analyse_data()
-
-    # client.aw(node.lock_node())
+    node = client.aw(client.wait_for_node()) #Update states and sensor values at each iteration
+    flag = local_nav.analyse_data() # store a flag if obstacle detected (red LEDS)
     node.send_set_variables(cruise_speed)
     if flag == 1:
-        task = local_nav.obstacle_avoidance()
+        task = local_nav.obstacle_avoidance() #trigger task depending on if flag detected
     else:
         pass
 
@@ -41,15 +36,4 @@ while counter < 1000:
     counter += 1
     print(counter)
 node.send_set_variables(stop)
-# #
-# async def prog():
-#     node = await client.wait_for_node()
-#     await node.lock()
-#     await node.set_variables(cruise_speed)
-#     await client.sleep(2)
-#     await node.set_variables(stop)
-#     await node.unlock()
 #
-# client.run_async_program(prog)
-
-# obst_avoid_task = local_nav.obstacle_avoidance()
