@@ -40,19 +40,24 @@ class Local_Nav:
         middle_sens = prox_sens_data[2]
         right_sens = prox_sens_data[3:5]
         back_sens = prox_sens_data[5:7]
-
+        obstSpeedGain = [6, 4, -2]    # /100
+        gain = 0
+        adjust_speed = 0
         if flag == 1:
             if left_sens != [0,0]:
-                gain = 100
-                adjust_speed = self.motors(self.motor_speed_left + gain, self.motor_speed_right)
-                self.node.send_set_variables(adjust_speed)
+                for i in range(2):
+                    gain += left_sens[i] * obstSpeedGain[i]//100
+                    adjust_speed = self.motors(self.motor_speed_left * gain, self.motor_speed_right)
+                    self.node.send_set_variables(adjust_speed)
             elif right_sens != [0,0]:
-                gain = 100
-                adjust_speed = self.motors(self.motor_speed_left, self.motor_speed_right + gain)
-                self.node.send_set_variables(adjust_speed)
+                for i in range(2):
+                    gain += right_sens[i] * obstSpeedGain[i]//100
+                    adjust_speed = self.motors(self.motor_speed_left, self.motor_speed_right * gain)
+                    self.node.send_set_variables(adjust_speed)
+
             elif middle_sens != 0:
-                gain = 100
-                adjust_speed = self.motors(-self.motor_speed_left - 5*gain, -self.motor_speed_right - 5*gain)
+                gain = middle_sens * obstSpeedGain[2]//100
+                adjust_speed = self.motors(-self.motor_speed_left * gain, -self.motor_speed_right * gain)
                 self.node.send_set_variables(adjust_speed)
 
             elif back_sens != [0,0]:
