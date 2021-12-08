@@ -6,23 +6,42 @@ import Local_Nav as LN
 client = ClientAsync()
 node = client.aw(client.wait_for_node())
 
-local_nav = LN.Local_Nav(client, node)
-data = local_nav.get_sensor_data()
-print("this is my data : ", data)
-data_analysis = local_nav.analyse_data()
-print("analysed data : ", data_analysis)
-# #
+# set Cruise speed here
+cruisin = 100;
+
+motor_speed_left = cruisin
+motor_speed_right = cruisin
+
+# Define local_nav object with class attributes
+local_nav = LN.Local_Nav(client, node, motor_speed_left, motor_speed_right)
+
 
 client.aw(node.lock_node())
 cruise_speed = local_nav.motors(100,100)
-# stop = local_nav.motors(0,0)
+stop = local_nav.motors(0,0)
 print("My man, our cruise speed is: ", cruise_speed)
-# colour_switch = local_nav.colour(3)
-# print(colour_switch)
-var_dic = cruise_speed
-# client.aw(node.lock_node())
+
 node.flush()
-#
+
+counter = 1
+while counter < 1000:
+
+    node = client.aw(client.wait_for_node())
+    data = local_nav.get_sensor_data()
+    flag = local_nav.analyse_data()
+
+    # client.aw(node.lock_node())
+    node.send_set_variables(cruise_speed)
+    if flag == 1:
+        task = local_nav.obstacle_avoidance()
+    else:
+        pass
+
+    node.flush()
+    counter += 1
+    print(counter)
+node.send_set_variables(stop)
+# #
 # async def prog():
 #     node = await client.wait_for_node()
 #     await node.lock()
@@ -33,4 +52,4 @@ node.flush()
 #
 # client.run_async_program(prog)
 
-
+# obst_avoid_task = local_nav.obstacle_avoidance()
