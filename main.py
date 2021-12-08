@@ -10,8 +10,8 @@ import Kalman as kal
 #    FIND SHORTEST PATH
 #----------------------------------------------------------------------------------------------------------------
 # Capturing the map to find the shortest path
-# cap = cv.VideoCapture(1 + cv.CAP_DSHOW) 
-# isTrue, frame = cap.read()
+cap = cv.VideoCapture(1 + cv.CAP_DSHOW)
+isTrue, frame = cap.read()
 
 # img = vd.rescaleFrame(frame, scale=0.5)
 source = cv.imread("source.png")
@@ -49,26 +49,26 @@ cv.waitKey(0)
 #    TRACKING THE THYMIO
 #----------------------------------------------------------------------------------------------------------------
 
-# while (True):
-#     ret, frame = cap.read()
+while (True):
+    ret, frame = cap.read()
 
-#     # frame_resize = rescale(frame, scale=0.5)
+    # frame_resize = rescale(frame, scale=0.5)
 
-#     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
-#     cv.imshow('frame', gray)
+    cv.imshow('frame', gray)
     
 
-#     if cv.waitKey(1) & 0xFF == ord('q'):
-#         break
+    if cv.waitKey(1) & 0xFF == ord('q'):
+        break
 
+cv.waitKey(0)
+cap.release()
+cv.destroyAllWindows()
+
+# cv.imshow('dst', frame)
 # cv.waitKey(0)
-# cap.release()
 # cv.destroyAllWindows()
-
-# # cv.imshow('dst', frame)
-# # cv.waitKey(0)
-# # cv.destroyAllWindows()
 
 #----------------------------------------------------------------------------------------------------------------
 #   KALMAN FILTER PART
@@ -96,3 +96,4 @@ ydot_obs = np.array([280, 282, 285, 286, 290])
 for i in range(len(x_obs)):
     X_est, P_est = kal.kalman_filter(X_est, P_est, Q, R, x_obs[i], xdot_obs[i], y_obs[i], ydot_obs[i])
     print(X_est)
+
