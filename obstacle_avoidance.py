@@ -36,7 +36,7 @@ while counter < 100:
     node.flush()
     counter += 1
     print(counter)
-colour_switch = local_nav.colour(2)
+colour_switch = local_nav.colour(3)
 node.send_set_variables(stop)
 node.flush()
 #
