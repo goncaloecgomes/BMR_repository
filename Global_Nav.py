@@ -1,5 +1,7 @@
 from tdmclient import ClientAsync
+import cv2 as cv
 import numpy as np
+from pyzbar.pyzbar import decode
 
 # client = ClientAsync()
 
@@ -86,6 +88,54 @@ class Global_Nav():
         self.X = X_est_a_priori + np.dot(K, i)
         self.P_est = P_est_a_priori - np.dot(K, np.dot(H, P_est_a_priori))
         return 
+
+
+    def find_thymio(self, img, pixel_to_cm):
+        img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)    
+        # create a mask based on the threshold
+        binary_mask = img_gray > 100
+        bin_img = np.zeros_like(img)
+        bin_img[binary_mask] = img[binary_mask]
+        binary_mask = bin_img != 0
+        white = np.ones_like(img)*255
+        bin_img[binary_mask] = white[binary_mask]
+        result = decode(bin_img)
+        if len(result)>=1:
+            qr_loc = result[0][3]
+            thymio_xy_pix = np.array([int((qr_loc[0].x+qr_loc[1].x+qr_loc[2].x+qr_loc[3].x)/4), 
+                                    int((qr_loc[0].y+qr_loc[1].y+qr_loc[2].y+qr_loc[3].y)/4)]) #in pixels
+            thymio_xy = thymio_xy_pix*pixel_to_cm # cm
+
+            # Orientation
+            if str(result[0][4])=='ZBarOrientation.RIGHT':
+                if np.abs(qr_loc[3].y-qr_loc[0].y) < np.abs(qr_loc[1].y-qr_loc[0].y):
+                    mid_point_back = np.array([int((qr_loc[0].x+qr_loc[1].x)/2), int((qr_loc[0].y+qr_loc[1].y)/2)])
+                else:
+                    mid_point_back = np.array([int((qr_loc[0].x+qr_loc[3].x)/2), int((qr_loc[0].y+qr_loc[3].y)/2)])
+            
+            elif str(result[0][4])=='ZBarOrientation.DOWN':
+                if np.abs(qr_loc[0].y-qr_loc[3].y) > np.abs(qr_loc[1].y-qr_loc[0].y):
+                    mid_point_back = np.array([int((qr_loc[2].x+qr_loc[3].x)/2), int((qr_loc[2].y+qr_loc[3].y)/2)])
+                else:
+                    mid_point_back = np.array([int((qr_loc[0].x+qr_loc[3].x)/2), int((qr_loc[0].y+qr_loc[3].y)/2)])
+
+            elif str(result[0][4])=='ZBarOrientation.LEFT':
+                if np.abs(qr_loc[0].y-qr_loc[3].y) > np.abs(qr_loc[1].y-qr_loc[0].y):
+                    mid_point_back = np.array([int((qr_loc[2].x+qr_loc[1].x)/2), int((qr_loc[2].y+qr_loc[1].y)/2)])
+                else:
+                    mid_point_back = np.array([int((qr_loc[2].x+qr_loc[3].x)/2), int((qr_loc[2].y+qr_loc[3].y)/2)])      
+            
+            elif str(result[0][4])=='ZBarOrientation.UP':
+                if np.abs(qr_loc[3].y-qr_loc[0].y) > np.abs(qr_loc[1].y-qr_loc[0].y):
+                    mid_point_back = np.array([int((qr_loc[0].x+qr_loc[1].x)/2), int((qr_loc[0].y+qr_loc[1].y)/2)])
+                else:
+                    mid_point_back = np.array([int((qr_loc[2].x+qr_loc[1].x)/2), int((qr_loc[2].y+qr_loc[1].y)/2)])
+
+            thymio_vec = thymio_xy_pix - mid_point_back
+            phi = np.arctan(thymio_vec[1]/thymio_vec[0])
+            thymio_pose = np.array([thymio_xy[0], thymio_xy[1], phi])
+
+            return thymio_xy_pix, thymio_pose
 
 
     def update_states(self):
