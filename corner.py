@@ -4,11 +4,12 @@ import numpy as np
 
 def find_centroids(dst, gray):
     """return the central corner based on cornerHarris output"""
-    ret, dst = cv2.threshold(dst, 0.01 * dst.max(), 255, 0)
+    ret, dst = cv2.threshold(dst, 0.0001 * dst.max(), 255, 0)
     dst = np.uint8(dst)
 
     # find centroids
     ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
+    print("len_centroids_function:",centroids,"\n")
     # define the criteria to stop and refine the corners
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 
                 0.001)
@@ -30,7 +31,7 @@ def coord_corners (image):
 
     gray = np.float32(gray)
 
-    #gray = cv2.GaussianBlur(gray,(9,9),0)
+    gray = cv2.GaussianBlur(gray,(11,11),0)
 
     dst = cv2.cornerHarris(gray, 3, 3, 0.04)
 
