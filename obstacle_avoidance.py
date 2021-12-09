@@ -23,7 +23,7 @@ stop = local_nav.motors(0,0)
 
 # Test Local Navigation Class
 counter = 1
-while counter < 100:
+while counter < 300:
 
     node = client.aw(client.wait_for_node()) #Update states and sensor values at each iteration
     flag = local_nav.analyse_data() # store a flag if obstacle detected (red LEDS)
