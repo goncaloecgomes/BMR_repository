@@ -44,12 +44,12 @@ class Global_Nav():
         return vr, vl
 
 
-    def get_sensor_data(self):
+    def get_motor_speed(self):
         self.client.aw(self.node.wait_for_variables({"motor.left.speed"}))
-        left_speed_sensor = self.node.v.motor.left.speed
+        left_motor_speed = self.node.v.motor.left.speed
         self.client.aw(self.node.wait_for_variables({"motor.right.speed"}))
-        right_speed_sensor = self.node.v.motor.rigth.speed
-        return  np.array([left_speed_sensor, right_speed_sensor])
+        right_motor_speed = self.node.v.motor.right.speed
+        return  np.array([left_motor_speed, right_motor_speed])
 
 
     def covariance(sigmax, sigmaxdot, sigmay, sigmaydot, sigmatheta, sigmathetadot):

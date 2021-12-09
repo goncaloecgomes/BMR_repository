@@ -65,7 +65,7 @@ class Local_Nav:
 
                 self.node.send_set_variables(adjust_speed)
 
-            elif middle_sens > 3000:
+            elif middle_sens < 3000:
                 print("middle sens is : ", middle_sens)
                 gain = 0
                 if left_sens[1] != 0:
@@ -77,7 +77,7 @@ class Local_Nav:
                     adjust_speed = self.motors(self.motor_speed_left, self.motor_speed_right + 2*gain)
                     self.node.send_set_variables(adjust_speed)
 
-            elif middle_sens > 4000 :
+            elif middle_sens > 3000 :
                 adjust_speed = self.motors(-self.sat_speed, -self.sat_speed)
                 self.node.send_set_variables(adjust_speed)
 
