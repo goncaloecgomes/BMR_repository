@@ -29,6 +29,7 @@ class Global_Nav():
     def PIDcontroller(self, phi_d, phi):
         """ PID controller """
         error = phi_d - phi
+        print(error)
         self.error_sum += error
         error_dif = error - self.previous_error
         self.previous_error = error
@@ -36,6 +37,7 @@ class Global_Nav():
         omega = self.K[0]*error + self.K[1]*self.error_sum + self.K[2]*error_dif
 
         v = ((self.motor_cruising[0] + self.motor_cruising[1])/2)/(self.omega_to_motor*self.r)
+        #v=0
 
         vr = (2*v+omega*self.L)/(2*self.r) # angular velocity of the right wheel
         vl = (2*v-omega*self.L)/(2*self.r) # angular velocity of the left wheel
@@ -76,7 +78,7 @@ class Global_Nav():
         H = np.identity(6)
 
         # innovation / measurement residual
-        i = self.X - np.dot(H, X_est_a_priori)
+        i = X - np.dot(H, X_est_a_priori)
         S = np.dot(H, np.dot(P_est_a_priori, H.T)) + self.R
 
         # Calculate the Kalman gain
@@ -132,11 +134,13 @@ class Global_Nav():
             thymio_vec = thymio_xy_pix - mid_point_back
             phi = np.arctan(thymio_vec[1]/thymio_vec[0])
             thymio_pose = np.array([thymio_xy[0], thymio_xy[1], phi])
+            flag = 1
         else:
-            thymio_xy_pix = 0
-            thymio_pose = 0
-            qr_loc = 0
-        return thymio_xy_pix, thymio_pose, qr_loc
+            thymio_xy_pix = np.zeros((1,3))
+            thymio_pose = np.zeros((1,3))
+            qr_loc = np.zeros((1,3))
+            flag = 0
+        return thymio_xy_pix, thymio_pose, qr_loc, flag
 
 
     def motors(self, motor_left, motor_right):
