@@ -13,6 +13,9 @@ class Local_Nav:
         self.client = client
         self.node = node #self.client.aw(self.client.wait_for_node())
         self.sat_speed = 500
+        self.lower_threshold = 2500
+        self.middle_threshold = 3200
+        self.upper_threshold = 40000
 
     def get_sensor_data(self):
 
@@ -23,12 +26,13 @@ class Local_Nav:
     def analyse_data(self):
         prox_sens_data = self.get_sensor_data()
 
-        if prox_sens_data == [0, 0, 0, 0, 0, 0, 0]:
-            self.colour(2)
+        if all(prox_sens_data) <= self.lower_threshold:
+            self.colour2(2)
             flag = 0
             return flag
         else :
-            self.colour(1)
+
+            self.colour2(1)
             flag = 1
             return flag
 
@@ -91,8 +95,6 @@ class Local_Nav:
                     adjust_speed = self.motors(-self.motor_speed_left + 5*gain, -self.motor_speed_right + gain)
                     self.node.send_set_variables(adjust_speed)
 
-
-
             elif back_sens != [0,0]:
                 if back_sens[0] != 0:
                     gain = 100
@@ -112,11 +114,49 @@ class Local_Nav:
 
             # self.node.send_set_variables(adjust_speed)
 
+    def obstacle_avoidance2(self)
+        flag = self.analyse_data()
+        obstSpeedGain = [6, 4, 2, -2]
+        motor_list = [self.motor_speed_left, self.motor_speed_right]
+
+        prox_sens_data = self.get_sensor_data()
+
+        extermity_sens = prox_sens_data[0,4]
+        mid_extermity_sens = prox_sens_data[1,3]
+        gain = [0,0]
+        if flag == 1:
+            for idx, val in enumerate(extermity_sens):
+                if val <= self.middle_threshold:
+                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[2] // 100
+                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                    self.node.send_set_variables(adjust_speed)
+                elif self.middle_threshold <= val <= self.upper_threshold:
+                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[1] // 100
+                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                    self.node.send_set_variables(adjust_speed)
+                elif val >= self.upper_threshold:
+                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[0] // 100
+                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                    self.node.send_set_variables(adjust_speed)
+
+
     def motors(self, motor_speed_left, motor_speed_right):
-        return {
-            "motor.left.target": [motor_speed_left],
-            "motor.right.target": [motor_speed_right],
-        }
+        if motor_speed_left and motor_speed_right <= 500:
+            return {
+                "motor.left.target": [motor_speed_left],
+                "motor.right.target": [motor_speed_right],
+            }
+        elif motor_speed_left >= 500:
+            return {
+                "motor.left.target": [self.sat_speed],
+                "motor.right.target": [motor_speed_right],
+            }
+        elif motor_speed_right >= 500:
+            return {
+                "motor.left.target": [motor_speed_left],
+                "motor.right.target": [self.sat_speed],
+            }
+
 
     def colour(self,c):
         leds_top = self.node.v.leds.top
@@ -131,6 +171,28 @@ class Local_Nav:
             leds_top[2] = 0
             return {"leds.top": [0,32,0]}
         elif c == 3: # make it blue
+            leds_top[0] = 0
+            leds_top[1] = 0
+            leds_top[2] = 32
+            return {"leds.top": [0, 0, 32]}
+
+        self.client.aw(self.node.lock_node())
+        self.node.var_to_send
+        self.node.flush()
+
+    def colour2(self, c):
+        leds_top = self.node.v.leds.bottom
+        if c == 1:  # make it red
+            leds_top[0] = 32
+            leds_top[1] = 0
+            leds_top[2] = 0
+            return {"leds.top": [32, 0, 0]}
+        elif c == 2:  # make it green
+            leds_top[0] = 0
+            leds_top[1] = 32
+            leds_top[2] = 0
+            return {"leds.top": [0, 32, 0]}
+        elif c == 3:  # make it blue
             leds_top[0] = 0
             leds_top[1] = 0
             leds_top[2] = 32
