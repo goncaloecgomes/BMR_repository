@@ -117,12 +117,10 @@ class Local_Nav:
     def obstacle_avoidance2(self)
         flag = self.analyse_data()
         obstSpeedGain = [6, 4, 2, -2]
-        motor_list = [self.motor_speed_left, self.motor_speed_right]
-
         prox_sens_data = self.get_sensor_data()
-
         extermity_sens = prox_sens_data[0,4]
         mid_extermity_sens = prox_sens_data[1,3]
+        middle_sensor = prox_sens_data[2]
         gain = [0,0]
         if flag == 1:
             for idx, val in enumerate(extermity_sens):
@@ -138,6 +136,9 @@ class Local_Nav:
                     gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[0] // 100
                     adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
                     self.node.send_set_variables(adjust_speed)
+            if middle_sensor <= self.upper_threshold:
+                adjust_speed = self.motors(2*self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                self.node.send_set_variables(adjust_speed)
 
 
     def motors(self, motor_speed_left, motor_speed_right):
