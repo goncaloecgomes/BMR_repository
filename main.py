@@ -4,7 +4,9 @@ import pyvisgraph_master.pyvisgraph as vg
 import corner as cn
 import Polygon as poly
 import video as vd
-import Kalman as kal
+#import Kalman as kal
+import extremitypathfinder_master.extremitypathfinder as EXTRE
+from QR_code import find_thymio
 
 import sys
 sys.setrecursionlimit(5000)
@@ -13,13 +15,13 @@ sys.setrecursionlimit(5000)
 #    FIND SHORTEST PATH
 #----------------------------------------------------------------------------------------------------------------
 # Capturing the map to find the shortest path
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #cap = cv.VideoCapture(2) 
 #isTrue, frame = cap.read()
-=======
-cap = cv.VideoCapture(1 + cv.CAP_DSHOW)
-isTrue, frame = cap.read()
->>>>>>> 2d45ee34a1c35b4dbc0c5291668ec3625ca832ce
+#=======
+# cap = cv.VideoCapture(1 + cv.CAP_DSHOW)
+# isTrue, frame = cap.read()
+#>>>>>>> 2d45ee34a1c35b4dbc0c5291668ec3625ca832ce
 
 # img = vd.rescaleFrame(frame, scale=0.5)
 # source = cv.imread("source.png")
@@ -28,34 +30,50 @@ isTrue, frame = cap.read()
 # img = cv.imread("data/poligonos.png")
 
 
-# cap = cv.VideoCapture(2)
+# cap = cv.VideoCapture(1 + cv.CAP_DSHOW)
 # count = 0 
 # while count<50:
 #     ret, img = cap.read()
 #     count += 1
 
-Thymio_size = 30
+Thymio_size = 100
 
-img = cv.imread("data/Real_Env1.jpeg")
-#img = img[100:399,55:575]
+img = cv.imread("data/Real_Env3.jpeg")
+
 
 
 print("Image Len:", img.shape)
 maxX,maxY,_ = img.shape
+img = vd.rescaleFrame(img, 0.5)
+img = img[90:451,169:767]
+cv.imshow("img", img)
 
 # ----------------- FIND SOURCE ------------------------
 
-# source, boxSource =
+source, _, qr_loc = find_thymio(img, 1/6)
 
+source = [source[1], source[0]]
+boxSource = []
+for i in range(len(qr_loc)):
+    boxSource.append([qr_loc[i].x, qr_loc[i].y])
+
+print(boxSource)
+
+boxSource = poly.augment_polygons([boxSource],maxX,maxY,10)
 # -----------------------------------------------------
 
+
 virtual_image = vd.draw_objects_in_Virtual_Env(img)
+cv.imshow("virtual_image", virtual_image)
 
 #------------------ ERASE QRCODE FROM VIRTUAL ENV
 
-#cv.drawContours(virtual_image, [boxSource], 0, (255,255,255),-1)
-
+pts = np.array(boxSource, np.int32)
+pts = pts.reshape((-1,1,2))
+cv.fillPoly(virtual_image, [pts], color=(255,255,255))
+cv.imshow("virtual image2", virtual_image)
 #---------------------------------------------------------------
+
 
 sink, poly_list = poly.get_polygons_from_image(virtual_image,False,True)
 
@@ -67,26 +85,60 @@ virtual_image = poly.draw_polygons_in_image(virtual_image,augmented_poly_list)
 
 thickness = 3
 
-virtual_image = cv.rectangle(virtual_image,(thickness,thickness),(maxY-thickness,maxX-thickness),(255,255,255),thickness*2)
+new_poly_list = poly.poly_out_of_bound(augmented_poly_list,maxX,maxY, Thymio_size)
 
-new_poly_list = poly.get_polygons_from_image(virtual_image,False,False)
-
-new_poly_list = poly.poly_out_of_bound(new_poly_list,maxX,maxY, Thymio_size)
-
-vg_poly_list = poly.transform_poly_in_vg_poly(new_poly_list)
+for new_poly in new_poly_list:
+    print("\nPOLY:", new_poly)
 
 
+#-----------------VG GRAPH---------------------------------
 
-g = vg.VisGraph()
-g.build(vg_poly_list)
+# vg_poly_list = poly.transform_poly_in_vg_poly(new_poly_list)
 
-#(sourceX, sourceY) = vd.findObject(template_img=cv.imread("data/source.png"), img_to_find= sink_goal)
-start_point = vg.Point(source[0], source[1]) #start --> We need to change this to the initial Position of the Thymio [TODO]
 
-#(sinkX, sinkY) = vd.findObject(template_img=cv.imread("data/sink.png"), img_to_find= sink_goal)
-end_point = vg.Point(sink[0], sink[1]) #goal --> We need to change this to the position of wtv we define is our goal [TODO]
 
-shortest = g.shortest_path(start_point, end_point)
+# g = vg.VisGraph()
+# g.build(vg_poly_list)
+
+# #(sourceX, sourceY) = vd.findObject(template_img=cv.imread("data/source.png"), img_to_find= sink_goal)
+# start_point = vg.Point(source[0], source[1]) #start --> We need to change this to the initial Position of the Thymio [TODO]
+
+# #(sinkX, sinkY) = vd.findObject(template_img=cv.imread("data/sink.png"), img_to_find= sink_goal)
+# end_point = vg.Point(sink[0], sink[1]) #goal --> We need to change this to the position of wtv we define is our goal [TODO]
+
+# shortest = g.shortest_path(start_point, end_point)
+
+
+# print("\n\n")
+# print("Shortest path:", shortest)
+# print("\n\n")
+
+# for _poly in poly_list:
+#     for point in _poly:
+#         cv.circle(img, (int(point[1]), int(point[0])), radius=5, color=(255, 0, 255), thickness=-1)
+
+# for point in shortest:
+#     sink_goal = cv.circle(img, (int(point.y), int(point.x)), radius=5, color=(0, 255, 0), thickness=-1)
+
+# cv.imshow("VE", virtual_image)
+# cv.imshow('frame', img)
+# cv.waitKey(0)
+
+# #cap.release()
+# cv.destroyAllWindows()
+
+#---------------------------------------------------------------
+
+#---------------------- EXTREMITYGRAPH-------------------------
+
+environment = EXTRE.PolygonEnvironment()
+
+boundary_coordinates = [(0, 0), (0, maxX), (maxY, 0), (maxY, maxX)]
+
+environment.store(boundary_coordinates,new_poly_list,validate = False)
+environment.prepare()
+shortest,length = environment.find_shortest_path(source,sink)
+
 
 print("\n\n")
 print("Shortest path:", shortest)
@@ -97,7 +149,7 @@ for _poly in poly_list:
         cv.circle(img, (int(point[1]), int(point[0])), radius=5, color=(255, 0, 255), thickness=-1)
 
 for point in shortest:
-    sink_goal = cv.circle(img, (int(point.y), int(point.x)), radius=5, color=(0, 255, 0), thickness=-1)
+    sink_goal = cv.circle(img, (int(point[1]), int(point[0])), radius=5, color=(0, 255, 0), thickness=-1)
 
 cv.imshow("VE", virtual_image)
 cv.imshow('frame', img)

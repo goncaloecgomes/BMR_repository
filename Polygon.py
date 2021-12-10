@@ -62,8 +62,6 @@ def build_poly(point, edges ,edge_list, corners_list, poly, maxX, maxY, is_point
             if(edges[next[0], next[1]] > 250):
                 if next in corners_list:
                     build_poly(next,edges, edge_list, corners_list, poly,maxX,maxY,True)
-                # else:
-                #     build_poly(next,edges, edge_list, corners_list, poly,maxX,maxY, False)
 
     for path_point in path:
         next = list(np.array(point) + path_point)
@@ -95,6 +93,11 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
     poly = []
     poly_list=[]
 
+    if show == True:
+        cv.imshow('frame', dst)
+        #Destroy all the windows
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
     for corner in corners_list:
         edges[corner[0], corner[1]] = 255
@@ -109,11 +112,7 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
     poly_list = [x for x in poly_list if len(x) != 0]
 
     
-    if show == True:
-        cv.imshow('frame', dst)
-        #Destroy all the windows
-        cv.waitKey(0)
-        cv.destroyAllWindows()
+ 
 
  
     for element in poly_list:
@@ -133,6 +132,10 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
             if(np.linalg.norm(np.array(bgr_values)-np.array([255,0,0])) <= 50):
                 print("sink")
                 sink = centroid
+                new_poly = [ [point[1],point[0]] for point in poly]
+                pts = np.array(new_poly, np.int32)
+                pts = pts.reshape((-1,1,2))
+                cv.fillPoly(image, [pts], color=(255,255,255))
             remove_list.append(poly)
 
     print("Poligons to be removed:", remove_list)
@@ -155,7 +158,7 @@ def augment_polygons(poly_list,maxX,maxY, Thymio_size):
         scaled_augmented_points = []
         centroid = get_poly_centroid(poly,maxX,maxY)
         distance_from_centroid = np.linalg.norm(np.array(centroid)-np.array(poly[0]))
-        scale = 1 + (Thymio_size*1.2)/distance_from_centroid
+        scale = 1 + (Thymio_size)/distance_from_centroid
 
         augmented_poly = np.array(poly) - np.array(centroid)
         augmented_poly = augmented_poly * scale
@@ -163,14 +166,9 @@ def augment_polygons(poly_list,maxX,maxY, Thymio_size):
         augmented_poly = augmented_poly.tolist()
 
         for augmented_point in augmented_poly:
-            if (augmented_point[0]<maxX) & (augmented_point[1]< maxY): 
-                x = int(augmented_point[0])
-                y = int(augmented_point[1])
-                scaled_augmented_poly.append([x,y])
-            else:
-                x = int(augmented_point[0])
-                y = int(augmented_point[1])
-                scaled_augmented_poly.append([x,y])
+            x = int(augmented_point[0])
+            y = int(augmented_point[1])
+            scaled_augmented_poly.append([x,y])
         augmented_poly_list.append(scaled_augmented_poly)
 
     return augmented_poly_list
@@ -211,12 +209,12 @@ def poly_out_of_bound(poly_list,maxX,maxY, thymio_size):
     for poly in poly_list:
         for corner in poly:
             if corner[0] < thymio_size:
-                corner[0] = -2*maxX
+                corner[0] = -10
             if corner[0] > (maxX-thymio_size):
-                corner[0] = 2*maxX
+                corner[0] = maxX
             if corner[1] < thymio_size:
-                corner[1] = -2*maxY
+                corner[1] = -10
             if corner[1] > (maxY-thymio_size):
-                corner[1] = 2*maxY
+                corner[1] = maxY
 
     return poly_list

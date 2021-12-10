@@ -87,7 +87,7 @@ def draw_objects_in_Virtual_Env(src):
     #https://docs.opencv.org/3.4/de/d62/tutorial_bounding_rotated_ellipses.html
     
     
-    threshold = 32
+    threshold = 62
     maxX,maxY,_ = src.shape
     print("MAXX,MAXY:",maxX,"\n",maxY,"\n")
     src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
@@ -120,12 +120,14 @@ def draw_objects_in_Virtual_Env(src):
         centroid = poly.get_poly_centroid(box,maxY,maxX)
         bgr_poly = src[int(centroid[1]),int(centroid[0])]
 
-        color = (0,0,0)
+        color = (255,255,255)
 
-        if(np.linalg.norm(np.array(bgr_poly)-np.array([40,30,30])) >= 25):
-            if(np.linalg.norm(np.array(bgr_poly)-np.array([143,136,105])) <= 25):
-                print("sink")
-                color = (255,0,0)
+        if(np.linalg.norm(np.array(bgr_poly)-np.array([40,30,30])) <= 50):
+            color = (0,0,0)
+
+        if(np.linalg.norm(np.array(bgr_poly)-np.array([143,136,105])) <= 25):
+            print("sink")
+            color = (255,0,0)
 
         cv.drawContours(drawing, [box], 0, color,-1)
     
@@ -258,3 +260,58 @@ def gen_QR(image, filename):
 # vid.release()
 # # Destroy all the windows
 # cv.destroyAllWindows()
+
+#------------------FIND TRESHHOLD-------------
+
+
+# def thresh_callback(val):
+
+#     threshold = val
+    
+#     canny_output = cv.Canny(src_gray, threshold, threshold * 2)
+    
+    
+#     contours, _ = cv.findContours(canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    
+#     # Find the rotated rectangles and ellipses for each contour
+#     minRect = [None]*len(contours)
+#     minEllipse = [None]*len(contours)
+#     for i, c in enumerate(contours):
+#         minRect[i] = cv.minAreaRect(c)
+#         if c.shape[0] > 5:
+#             minEllipse[i] = cv.fitEllipse(c)
+#     # Draw contours + rotated rects + ellipses
+    
+#     drawing = np.zeros((canny_output.shape[0], canny_output.shape[1], 3), dtype=np.uint8)
+    
+#     for i, c in enumerate(contours):
+#         color = (rng.randint(0,256), rng.randint(0,256), rng.randint(0,256))
+#         # contour
+#         cv.drawContours(drawing, contours, i, color)
+#         # ellipse
+#         # rotated rectangle
+#         box = cv.boxPoints(minRect[i])
+#         box = np.intp(box) #np.intp: Integer used for indexing (same as C ssize_t; normally either int32 or int64)
+#         cv.drawContours(drawing, [box], 0, color)
+    
+    
+#     cv.imshow('Contours', drawing)
+
+
+# src = cv.imread("data/Real_Env3.jpeg")
+# src = rescaleFrame(src, 0.5)
+# src = src[87:451,169:767]
+
+# src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+# src_gray = cv.blur(src_gray, (3,3))
+# if src is None:
+#     print('Could not open or find the image:')
+#     exit(0)
+# source_window = 'Source'
+# cv.namedWindow(source_window)
+# cv.imshow(source_window, src)
+# max_thresh = 255
+# thresh = 100 # initial threshold
+# cv.createTrackbar('Canny Thresh:', source_window, thresh, max_thresh, thresh_callback)
+# thresh_callback(thresh)
+# cv.waitKey()
