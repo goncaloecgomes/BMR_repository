@@ -39,8 +39,8 @@ class Global_Nav():
         v = ((self.motor_cruising[0] + self.motor_cruising[1])/2)/(self.omega_to_motor*self.r)
         #v=0
 
-        vr = (2*v+omega*self.L)/(2*self.r) # angular velocity of the right wheel
-        vl = (2*v-omega*self.L)/(2*self.r) # angular velocity of the left wheel
+        vr = (2*v-omega*self.L)/(2*self.r) # angular velocity of the right wheel
+        vl = (2*v+omega*self.L)/(2*self.r) # angular velocity of the left wheel
         return vr, vl
 
 

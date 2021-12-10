@@ -82,9 +82,9 @@ vid = cv.VideoCapture(1+ cv.CAP_DSHOW)
 while(True):
     isTrue, img = vid.read()      
     next_point = 0
-    while (np.abs(X[3]-path_cm[1]) > 0) and (np.abs(X[1]-path_cm[0]) > 0):
+    while (np.abs(X[3]-path_cm[1]) > 0.1) and (np.abs(X[1]-path_cm[0]) > 0.1):
         #isTrue, img = vid.read()
-        while (np.abs(X[3]-path_cm[next_point+1]) > 0) and (np.abs(X[1]-path_cm[next_point]) > 0):
+        while (np.abs(X[3]-path_cm[next_point+1]) > 0.1) and (np.abs(X[1]-path_cm[next_point]) > 0.1):
             isTrue, img = vid.read()
             if isTrue:
                 # cv.imshow("Video", img)
@@ -97,7 +97,7 @@ while(True):
                 client.aw(node.lock_node())
                 #await node.lock_node()
                 # Calculate desired angle
-                phi_d = np.arctan((X[3]-path[next_point+1])/(X[1]-path[next_point]))
+                phi_d = np.arctan2((path[next_point+1]-X[3]),(path[next_point]-X[1]))
                 error = phi_d - X[5]
                 if np.abs(error)>0.5:
                     # Control action to make the Thymio follow the reference
@@ -157,7 +157,7 @@ while(True):
                 if cv.waitKey(1) & 0xFF == ord('q'):
                     break
                 #X = GN.kalman_filter(X)
-                #print(X[1]/pixel_to_cm, X[3]/pixel_to_cm)
+                print(X[1]/pixel_to_cm, X[3]/pixel_to_cm)
         next_point += 1
         #img = cv.circle(img, (thymio_xy_pix[0], thymio_xy_pix[1]), radius=10, color=(0, 0, 255), thickness=-1)
         #img = cv.circle(img, (path[next_point], path[next_point+1]), radius=10, color=(255, 0, 0), thickness=-1)
