@@ -46,84 +46,8 @@ class Local_Nav:
             return flag
 
 
+
     def obstacle_avoidance(self):
-
-        flag = self.analyse_data()
-        prox_sens_data = self.get_sensor_data()
-        left_sens = prox_sens_data[0:2]
-        middle_sens = prox_sens_data[2]
-        right_sens = prox_sens_data[3:5]
-        back_sens = prox_sens_data[5:7]
-        obstSpeedGain = [6, 4, -2]    # /100
-        if flag == 1:
-            if left_sens[0] or left_sens[1] != 0:
-                gain = 0
-                for i in range(2):
-                    gain += left_sens[i] * obstSpeedGain[i] // 100
-                print("gain is ", gain)
-                if self.motor_speed_left + gain < self.sat_speed:
-                    adjust_speed = self.motors(self.motor_speed_left + gain, self.motor_speed_right - gain)
-                else:
-                    adjust_speed = self.motors(self.sat_speed, self.motor_speed_right)
-
-                self.node.send_set_variables(adjust_speed)
-            elif right_sens[0] or right_sens[1] != 0:
-                gain = 0
-                for i in range(2):
-                    gain += right_sens[i] * obstSpeedGain[i] // 100
-                if self.motor_speed_right + gain < self.sat_speed:
-                    adjust_speed = self.motors( self.motor_speed_left - gain  , self.motor_speed_right + gain)
-                else:
-                    adjust_speed = self.motors(self.motor_speed_left, self.sat_speed)
-
-                self.node.send_set_variables(adjust_speed)
-
-            elif middle_sens < 3000:
-                print("middle sens is : ", middle_sens)
-                gain = 0
-                if left_sens[1] != 0:
-                    gain = left_sens[1] * obstSpeedGain[1] // 100
-                    adjust_speed = self.motors(self.motor_speed_left + 2*gain, self.motor_speed_right)
-                    self.node.send_set_variables(adjust_speed)
-                elif right_sens[0] != 0:
-                    gain = right_sens[1] * obstSpeedGain[0] // 100
-                    adjust_speed = self.motors(self.motor_speed_left, self.motor_speed_right + 2*gain)
-                    self.node.send_set_variables(adjust_speed)
-
-            elif middle_sens > 3000 :
-                adjust_speed = self.motors(-self.sat_speed, -self.sat_speed)
-                self.node.send_set_variables(adjust_speed)
-
-            elif middle_sens > 4000 and left_sens[1] < right_sens[0]:
-                    gain = middle_sens * obstSpeedGain[2] // 100
-                    print("gain sens is : ", gain)
-                    adjust_speed = self.motors(-self.motor_speed_left + gain, -self.motor_speed_right + 5*gain)
-                    self.node.send_set_variables(adjust_speed)
-            elif middle_sens > 4000 and left_sens[1] > right_sens[0]:
-                    gain = middle_sens * obstSpeedGain[2] // 100
-                    adjust_speed = self.motors(-self.motor_speed_left + 5*gain, -self.motor_speed_right + gain)
-                    self.node.send_set_variables(adjust_speed)
-
-            elif back_sens != [0,0]:
-                if back_sens[0] != 0:
-                    gain = 100
-                    adjust_speed = self.motors(self.motor_speed_left + gain, self.motor_speed_right )
-                    self.node.send_set_variables(adjust_speed)
-                elif back_sens[1] != 0:
-                    gain = 100
-                    adjust_speed = self.motors(self.motor_speed_left, self.motor_speed_right + gain)
-                    self.node.send_set_variables(adjust_speed)
-            # elif prox_sens_data[1:6] != [0,0,0,0,0]:
-            #         gain = 100
-            #         adjust_speed = self.motors(-self.motor_speed_left - gain, - self.motor_speed_right - gain)
-            #         self.node.send_set_variables(adjust_speed)
-
-        else :
-            pass
-
-            # self.node.send_set_variables(adjust_speed)
-
-    def obstacle_avoidance2(self):
         flag = self.analyse_data()
         obstSpeedGain = [6, 4, 2, -2]
         prox_sens_data = self.get_sensor_data()
@@ -131,8 +55,6 @@ class Local_Nav:
         mid_extermity_sens = [prox_sens_data[1], prox_sens_data[3]]
         middle_sensor = prox_sens_data[2]
         gain = [0,0]
-        gain_low = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[2] // 100,
-                (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[2] // 100]
         gain_mid = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[1] // 100,
                 (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[1] // 100]
         gain_high = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
@@ -145,18 +67,15 @@ class Local_Nav:
                                                    self.motor_speed_right + gain_mid[1])
                         self.node.send_set_variables(adjust_speed)
                     elif self.middle_threshold <= extermity_sens[i] or mid_extermity_sens[i] <= self.upper_threshold:
-                        print("gain 2 is ", gain)
                         adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
                                                    self.motor_speed_right + gain_mid[1])
                         self.node.send_set_variables(adjust_speed)
                     elif extermity_sens[i] or mid_extermity_sens[i] >= self.upper_threshold:
-                        print("gain 3 is ", gain)
                         adjust_speed = self.motors(self.motor_speed_left + gain_high[0],
                                                    self.motor_speed_right + gain_high[1])
                         self.node.send_set_variables(adjust_speed)
 
                     elif extermity_sens[i] and mid_extermity_sens[i] >= self.upper_threshold:
-                        print("gain 3 is ", gain)
                         if i == 0:
                             adjust_speed = self.motors(self.motor_speed_left + gain_high[0],
                                                        -self.motor_speed_right - gain_high[1])
@@ -168,18 +87,16 @@ class Local_Nav:
             if mid_extermity_sens[0] or mid_extermity_sens[1] >= self.lower_threshold:
                 for i in range(2):
                     if extermity_sens[i] or mid_extermity_sens[i] <= self.middle_threshold:
-                        print("gain is ", gain)
                         adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
                                                    self.motor_speed_right + gain_mid[1])
                         self.node.send_set_variables(adjust_speed)
                     elif self.middle_threshold <= extermity_sens[i] or mid_extermity_sens[i] <= self.upper_threshold:
-                        print("gain 2 is ", gain)
                         adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
                                                    self.motor_speed_right + gain_mid[1])
                         self.node.send_set_variables(adjust_speed)
                     elif extermity_sens[i] and mid_extermity_sens[i] >= self.upper_threshold:
-                        print("gain 3 is ", gain)
                         if i is 0:
+                            print("hi there")
                             adjust_speed = self.motors(self.motor_speed_left + gain_high[0],
                                                        -self.motor_speed_right - gain_high[1])
                         else:
@@ -187,8 +104,12 @@ class Local_Nav:
                                                        self.motor_speed_right + gain_high[1])
                         self.node.send_set_variables(adjust_speed)
             if self.lower_threshold <= middle_sensor <= self.middle_threshold:
-                adjust_speed = self.motors(self.motor_speed_left + gain[0],
-                                           2*self.motor_speed_right + gain_high[1])
+                if mid_extermity_sens[0] <= mid_extermity_sens[1]:
+                    adjust_speed = self.motors(-self.motor_speed_left - gain[0],
+                                               2*self.motor_speed_right + gain_high[1])
+                else:
+                    adjust_speed = self.motors(2*self.motor_speed_left + gain[0],
+                                                -self.motor_speed_right - gain_high[1])
                 self.node.send_set_variables(adjust_speed)
             if middle_sensor >= self.lower_threshold and mid_extermity_sens[0] >= self.middle_threshold:
                     adjust_speed = self.motors(-self.motor_speed_left - gain_high[0],
