@@ -13,9 +13,9 @@ class Local_Nav:
         self.client = client
         self.node = node #self.client.aw(self.client.wait_for_node())
         self.sat_speed = 500
-        self.lower_threshold = 2500
-        self.middle_threshold = 3200
-        self.upper_threshold = 40000
+        self.lower_threshold = 2000
+        self.middle_threshold = 2800
+        self.upper_threshold = 3500
 
     def get_sensor_data(self):
 
@@ -26,12 +26,21 @@ class Local_Nav:
     def analyse_data(self):
         prox_sens_data = self.get_sensor_data()
 
-        if all(prox_sens_data) <= self.lower_threshold:
-            self.colour2(2)
+
+        # if all(prox_sens_data) <= self.lower_threshold:
+        #
+        #     print(prox_sens_data)
+        #     print("flag is off")
+        #     self.colour2(2)
+        #     flag = 0
+        #     return flag
+
+        if prox_sens_data == [0, 0, 0, 0, 0, 0, 0]:
+            self.colour(2)
             flag = 0
             return flag
         else :
-
+            # print("flag is on")
             self.colour2(1)
             flag = 1
             return flag
@@ -114,40 +123,66 @@ class Local_Nav:
 
             # self.node.send_set_variables(adjust_speed)
 
-    def obstacle_avoidance2(self)
+    def obstacle_avoidance2(self):
         flag = self.analyse_data()
         obstSpeedGain = [6, 4, 2, -2]
         prox_sens_data = self.get_sensor_data()
-        extermity_sens = prox_sens_data[0,4]
-        mid_extermity_sens = prox_sens_data[1,3]
+        extermity_sens = [prox_sens_data[0], prox_sens_data[4]]
+        mid_extermity_sens = [prox_sens_data[1], prox_sens_data[3]]
         middle_sensor = prox_sens_data[2]
         gain = [0,0]
+        gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[1] // 100,
+                (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[1] // 100]
         if flag == 1:
-            for idx, val in enumerate(extermity_sens):
-                if val <= self.middle_threshold:
-                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[2] // 100
-                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
-                    self.node.send_set_variables(adjust_speed)
-                elif self.middle_threshold <= val <= self.upper_threshold:
-                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[1] // 100
-                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
-                    self.node.send_set_variables(adjust_speed)
-                elif val >= self.upper_threshold:
-                    gain[idx] = (mid_extermity_sens[idx] + extermity_sens[idx]) * obstSpeedGain[0] // 100
-                    adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
-                    self.node.send_set_variables(adjust_speed)
-            if middle_sensor <= self.upper_threshold:
-                adjust_speed = self.motors(2*self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+            if extermity_sens[0] or extermity_sens[1] >= self.lower_threshold:
+                for i in range(2):
+                    if extermity_sens[i] or mid_extermity_sens[i] <= self.middle_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[1] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[1] // 100]
+                        print("gain is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+                    elif self.middle_threshold <= extermity_sens[i] or mid_extermity_sens[i] <= self.upper_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
+                        print("gain 2 is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+                    elif extermity_sens[i] or mid_extermity_sens[i] >= self.upper_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
+                        print("gain 3 is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+            if mid_extermity_sens[0] or mid_extermity_sens[1] >= self.lower_threshold:
+                for i in range(2):
+                    if extermity_sens[i] or mid_extermity_sens[i] <= self.middle_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[1] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[1] // 100]
+                        print("gain is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+                    elif self.middle_threshold <= extermity_sens[i] or mid_extermity_sens[i] <= self.upper_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
+                        print("gain 2 is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+                    elif extermity_sens[i] or mid_extermity_sens[i] >= self.upper_threshold:
+                        # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
+                        #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
+                        print("gain 3 is ", gain)
+                        adjust_speed = self.motors(self.motor_speed_left + gain[0], self.motor_speed_right + gain[1])
+                        self.node.send_set_variables(adjust_speed)
+            if self.lower_threshold <= middle_sensor <= self.upper_threshold:
+                # gain = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
+                #         (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
+                adjust_speed = self.motors(self.motor_speed_left + gain[0], 2*self.motor_speed_right + gain[1])
                 self.node.send_set_variables(adjust_speed)
 
 
     def motors(self, motor_speed_left, motor_speed_right):
-        if motor_speed_left and motor_speed_right <= 500:
-            return {
-                "motor.left.target": [motor_speed_left],
-                "motor.right.target": [motor_speed_right],
-            }
-        elif motor_speed_left >= 500:
+        if motor_speed_left >= 500:
             return {
                 "motor.left.target": [self.sat_speed],
                 "motor.right.target": [motor_speed_right],
@@ -157,7 +192,11 @@ class Local_Nav:
                 "motor.left.target": [motor_speed_left],
                 "motor.right.target": [self.sat_speed],
             }
-
+        else:
+            return {
+                "motor.left.target": [motor_speed_left],
+                "motor.right.target": [motor_speed_right],
+            }
 
     def colour(self,c):
         leds_top = self.node.v.leds.top
@@ -182,7 +221,7 @@ class Local_Nav:
         self.node.flush()
 
     def colour2(self, c):
-        leds_top = self.node.v.leds.bottom
+        leds_top = self.node.v.leds.bottom.left
         if c == 1:  # make it red
             leds_top[0] = 32
             leds_top[1] = 0
