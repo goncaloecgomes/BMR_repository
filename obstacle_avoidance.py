@@ -22,7 +22,7 @@ cruise_speed = local_nav.motors(motor_speed_left,motor_speed_right)
 stop = local_nav.motors(0,0)
 
 # Test Local Navigation Class
-counter = 1
+counter = 0
 while counter < 200:
 
     node = client.aw(client.wait_for_node()) #Update states and sensor values at each iteration

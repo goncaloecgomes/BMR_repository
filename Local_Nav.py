@@ -39,7 +39,7 @@ class Local_Nav:
 
     def obstacle_avoidance(self):
         flag = self.analyse_data()
-        obstSpeedGain = [6, 4, 2, -2]
+        obstSpeedGain = [6, 4]
         prox_sens_data = self.get_sensor_data()
         extermity_sens = [prox_sens_data[0], prox_sens_data[4]]
         mid_extermity_sens = [prox_sens_data[1], prox_sens_data[3]]
