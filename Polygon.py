@@ -3,9 +3,6 @@ import numpy as np
 import pyvisgraph_master.pyvisgraph as vg
 import corner as cn
 import itertools
-import shapely
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 
 
 def get_poly_centroid(Polygon, maxX, maxY):
@@ -50,7 +47,7 @@ def build_poly(point, edges ,edge_list, corners_list, poly, maxX, maxY, is_point
     path = [up, up_right, right, down_right, down, down_left, left, up_left]
 
     if is_point_corner & (edges[point[0], point[1]] > 250):
-        print("\nCORNER:",point)
+        #print("\nCORNER:",point)
         poly.append(point)
 
     edges[point[0], point[1]] = 0
@@ -84,11 +81,11 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
     dst,_,corners_list = cn.coord_corners(image) 
     maxX, maxY, _ = image.shape
     edges,edge_list = get_edges(image)
-    print("corner_list:",corners_list,"\n")
-    print("corner_list_len:", len(corners_list),"\n")
-    print("maxX:\n",maxX)
-    print("maxY:\n", maxY)
-    print("edges:\n", edges.shape)
+    # print("corner_list:",corners_list,"\n")
+    # print("corner_list_len:", len(corners_list),"\n")
+    # print("maxX:\n",maxX)
+    # print("maxY:\n", maxY)
+    # print("edges:\n", edges.shape)
 
     poly = []
     poly_list=[]
@@ -115,22 +112,22 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
  
 
  
-    for element in poly_list:
-        print(element)
-        print("\n\n")
+    # for element in poly_list:
+    #     print(element)
+    #     print("\n\n")
 
     remove_list =[]
     for poly in poly_list:
         centroid = get_poly_centroid(poly,maxX,maxY)
-        print(centroid)
+        #print(centroid)
         
 
         bgr_values = image[int(centroid[0]),int(centroid[1])]
-        print(bgr_values)
+        #print(bgr_values)
 
         if(np.linalg.norm(np.array(bgr_values)-np.array([0,0,0])) >= 50):
             if(np.linalg.norm(np.array(bgr_values)-np.array([255,0,0])) <= 50):
-                print("sink")
+                # print("sink")
                 sink = centroid
                 new_poly = [ [point[1],point[0]] for point in poly]
                 pts = np.array(new_poly, np.int32)
@@ -138,7 +135,7 @@ def get_polygons_from_image(image, show = False, need_source_sink =True):
                 cv.fillPoly(image, [pts], color=(255,255,255))
             remove_list.append(poly)
 
-    print("Poligons to be removed:", remove_list)
+    #print("Poligons to be removed:", remove_list)
     for poly in remove_list:
         poly_list.remove(poly)
 
@@ -197,7 +194,7 @@ def draw_polygons_in_image(img,polys):
     """draw polygons in image"""
     for poly in polys:
         draw_poly = [ [x[1],x[0]] for x in poly ]
-        print("\nPolygon to draw:",draw_poly,"\n")
+        #print("\nPolygon to draw:",draw_poly,"\n")
         pts = np.array(draw_poly)
         img = cv.fillPoly(img, np.int32([pts]), (0,0,0))
 

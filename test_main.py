@@ -1,11 +1,21 @@
 # Import libraries
+
+import sys
+sys.setrecursionlimit(5000)
+
 import numpy as np
 import cv2 as cv
+
 from tdmclient import ClientAsync
 from Local_Nav import Local_Nav as LN
 from Global_Nav import Global_Nav 
+from QR_code import find_thymio
+import Polygon as poly
+import video as vd
+import extremitypathfinder_master.extremitypathfinder as EXTRE
 # import RepeatedTimer
 
+Thymio_size = 100 #size of thymio
 r = 2 # radius of the wheel (cm)
 L = 9.5 # distance from wheel to wheel (cm)
 v_max = 20 # cm/s
@@ -49,6 +59,64 @@ GN = Global_Nav(client, node, cruising, ts, Kp, Ki, Kd, error_sum, previous_erro
 path = np.array([400,250])
 vid = cv.VideoCapture(1 + cv.CAP_DSHOW)
 
+count = 0 
+while count<50:
+    ret, img = vid.read()
+    count += 1
+
+#cut off the image to just show the enviroment
+img = vd.rescaleFrame(img, 0.5)
+img = img[90:451,169:767]
+maxX,maxY,_ = img.shape 
+
+
+#---------------------Get Thymio
+source, _, qr_loc, _ = GN.find_thymio(img, pixel_to_cm)
+
+source = [source[1], source[0]] 
+boxSource = []
+for i in range(len(qr_loc)):
+    boxSource.append([qr_loc[i].x, qr_loc[i].y])
+
+# ---------------------Draw vitual enviroment 
+virtual_image = vd.draw_objects_in_Virtual_Env(img)
+
+#------------------ Erase the source from virtual enviroment$
+
+boxSource = poly.augment_polygons([boxSource],maxX,maxY,10)
+pts = np.array(boxSource, np.int32)
+pts = pts.reshape((-1,1,2))
+cv.fillPoly(virtual_image, [pts], color=(255,255,255))
+
+#-----------------Get polygons of virtual enviroment
+
+sink, poly_list = poly.get_polygons_from_image(virtual_image,False,True)
+
+#----------------- Augment Polygons 
+
+augmented_poly_list = poly.augment_polygons(poly_list,maxX,maxY,Thymio_size)
+
+#----------------- see polygons out of bound
+
+thickness = 3
+
+new_poly_list = poly.poly_out_of_bound(augmented_poly_list,maxX,maxY, Thymio_size)
+
+#----------------- Get shortest path
+
+environment = EXTRE.PolygonEnvironment()
+
+boundary_coordinates = [(0, 0), (0, maxX), (maxY, 0), (maxY, maxX)]
+
+environment.store(boundary_coordinates,new_poly_list,validate = False)
+environment.prepare()
+path,length = environment.find_shortest_path(source,sink)
+
+for point in path:
+    sink_goal = cv.circle(img, (int(point[1]), int(point[0])), radius=5, color=(0, 255, 0), thickness=-1)
+
+
+
 while True:
     isTrue, img = vid.read()
     if isTrue:
@@ -58,12 +126,17 @@ while True:
         # # desired button of your choice
         # if cv.waitKey(1) & 0xFF == ord('q'):
             #break
-        thymio_xy_pix,thymio_pose,_,flag = GN.find_thymio(img, pixel_to_cm)
+        thymio_xy_pix,thymio_pose,qr_loc,flag = GN.find_thymio(img, pixel_to_cm)
         if flag==1:
             break
 
+
+
 # After the loop release the cap object
 vid.release()
+
+
+
 # Destroy all the windows
 cv.destroyAllWindows()
 print('thymio found')
