@@ -1,32 +1,21 @@
-from tdmclient import ClientAsync
-import os
-import sys
 import math
-from statistics import mean
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
-
-
-
-# client = ClientAsync()
-#
-# node = client.aw(client.wait_for_node())
-#
 class Local_Nav:
 
     def __init__(self,client,node, motor_speed_left,motor_speed_right):
         self.motor_speed_left = motor_speed_left
         self.motor_speed_right = motor_speed_right
         self.client = client
-        self.node = node #self.client.aw(self.client.wait_for_node())
+        self.node = node
         self.sat_speed = 500
-        self.lower_threshold = 2800
+        self.lower_threshold = 2800 #lower threshold for proximity sensor values
         self.middle_threshold = 3500
         self.upper_threshold = 4000
 
+        #The measures were obtained empirically...
         self.sensor_distances = np.array([15, 9.6, 9, 8.5, 7.5, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 0.5, 0.2, 0])
         self.sensor_measurements = np.array(
             [0, 1186, 1420, 1510, 1715, 1830, 2069, 2250, 2468, 2850, 3155, 3468, 3940, 4355, 4432, 4500])
@@ -43,7 +32,6 @@ class Local_Nav:
 #######################################################################################################################
 
     def get_sensor_data(self):
-
         self.client.aw(self.node.wait_for_variables({"prox.horizontal"}))
         prox_sens = self.node.v.prox.horizontal
         return  list(prox_sens)
@@ -51,7 +39,6 @@ class Local_Nav:
     def analyse_data(self):
         prox_sens_data = self.get_sensor_data()
         check = [i for i in prox_sens_data if i >= self.lower_threshold]
-
         if any(check):
             flag = 1
             return flag
@@ -60,6 +47,11 @@ class Local_Nav:
             return flag
 
     def obstacle_avoidance(self):
+        ''' If a flag is detected, then obstacle avoidance will be activated. The flag returns 1 if any of the sensors
+        measured something higher that the self.lower_threshold value. The latter was iteratively tuned to adjust to the
+        constraining environment conditions, and could be made smaller if not in a confined space (with white walls...)
+        for better results.'''
+
         flag = self.analyse_data()
         obstSpeedGain = [6, 4, 2]
         prox_sens_data = self.get_sensor_data()
@@ -74,13 +66,11 @@ class Local_Nav:
                 (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 200]
         if flag == 1:
             if extermity_sens[0] or mid_extermity_sens[0] >= self.lower_threshold:
-                print("activated left")
                 adjust_speed = self.motors(self.motor_speed_left + gain_low[0],
                                            -self.motor_speed_right - gain_low[1])
                 self.node.send_set_variables(adjust_speed)
 
             elif extermity_sens[1] or mid_extermity_sens[1] >= self.lower_threshold:
-                print("activated right")
                 adjust_speed = self.motors(-self.motor_speed_left - gain_low[0],
                                            +self.motor_speed_right + gain_low[1])
                 self.node.send_set_variables(adjust_speed)
