@@ -1,4 +1,14 @@
 from tdmclient import ClientAsync
+import os
+import sys
+import math
+from statistics import mean
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
+from local_occupancy import sensor_measurements, sensor_distances
+from local_occupancy import thymio_coords, sensor_pos_from_center, sensor_angles
 
 
 # client = ClientAsync()
@@ -85,12 +95,12 @@ class Local_Nav:
                     elif extermity_sens[i] >= self.upper_threshold:
                         if i == 0:
                             print("hi there left", extermity_sens)
-                            adjust_speed = self.motors(self.motor_speed_left ,
-                                                       -self.motor_speed_right - gain_high[1])
+                            adjust_speed = self.motors(-self.motor_speed_left,
+                                                       -self.motor_speed_right - gain_high[0])
                         else:
                             print("hi there right", extermity_sens)
-                            adjust_speed = self.motors(-self.motor_speed_left - gain_high[0],
-                                                       self.motor_speed_right )
+                            adjust_speed = self.motors(-self.motor_speed_left - gain_high[1],
+                                                       -self.motor_speed_right )
                         self.node.send_set_variables(adjust_speed)
             if self.lower_threshold <= middle_sensor <= self.middle_threshold:
                 if mid_extermity_sens[0] <= mid_extermity_sens[1]:
@@ -173,10 +183,41 @@ class Local_Nav:
         elif c == 2:  # make it green
             return {"leds.bottom.left": [0, 32, 0] , "leds.bottom.right": [0, 32, 0]}
         elif c == 3:  # make it blue
-
             return {"leds.bottom.left": [0, 0, 32] , "leds.bottom.right": [0, 0, 32]}
 
         self.client.aw(self.node.lock_node())
         self.node.var_to_send
         self.node.flush()
+
+    def sensor_val_to_cm_dist(self, sens_val):
+        """
+        Returns the distance corresponding to the sensor value based
+        on the sensor characteristics
+        :param val: the sensor value that you want to convert to a distance
+        :return: corresponding distance in cm
+        """
+        if sens_val == 0:
+            return np.inf
+
+        f = interp1d(sensor_measurements, sensor_distances)
+        return f(sens_val).item()
+
+    def obstacles_pos_from_sensor_vals(self, sensor_vals):
+        """
+        Returns a list containing the position of the obstacles
+        w.r.t the center of the Thymio robot.
+        :param sensor_vals: sensor values provided clockwise starting from the top left sensor.
+        :return: numpy.array() that contains the position of the different obstacles
+        """
+        print(sensor_vals)
+        dist_to_sensor = [self.sensor_val_to_cm_dist(x) for x in sensor_vals]
+        dx_from_sensor = [d * math.cos(alpha) for (d, alpha) in zip(dist_to_sensor, sensor_angles)]
+        dy_from_sensor = [d * math.sin(alpha) for (d, alpha) in zip(dist_to_sensor, sensor_angles)]
+        obstacles_pos = [[x[0] + dx, x[1] + dy] for (x, dx, dy) in
+                         zip(sensor_pos_from_center, dx_from_sensor, dy_from_sensor)]
+        return np.array(obstacles_pos)
+
+    def local_occupancy(self):
+        pass
+
 
