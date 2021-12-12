@@ -36,8 +36,7 @@ class Local_Nav:
     def analyse_data(self):
         prox_sens_data = self.get_sensor_data()
 
-        if prox_sens_data <= [ self.lower_threshold,  self.lower_threshold,  self.lower_threshold,  self.lower_threshold,
-                               self.lower_threshold,  self.lower_threshold,  self.lower_threshold]:
+        if prox_sens_data == [0, 0, 0, 0, 0, 0, 0]:
             self.colour2(2)
             flag = 0
             return flag
@@ -61,48 +60,41 @@ class Local_Nav:
         gain_high = [(mid_extermity_sens[0] + extermity_sens[0]) * obstSpeedGain[0] // 100,
                 (mid_extermity_sens[1] + extermity_sens[1]) * obstSpeedGain[0] // 100]
         if flag == 1:
-            if extermity_sens[0] or extermity_sens[1] >= self.lower_threshold:
-                for i in range(2):
-                    if extermity_sens[i] or mid_extermity_sens[i] <= self.middle_threshold:
-                        adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
-                                                   self.motor_speed_right + gain_mid[1])
-                        self.node.send_set_variables(adjust_speed)
-                    elif self.middle_threshold <= extermity_sens[i] or mid_extermity_sens[i] <= self.upper_threshold:
-                        adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
-                                                   self.motor_speed_right + gain_mid[1])
-                        self.node.send_set_variables(adjust_speed)
-                    elif extermity_sens[i] or mid_extermity_sens[i] >= self.upper_threshold:
-                        adjust_speed = self.motors(self.motor_speed_left + gain_high[0],
-                                                   self.motor_speed_right + gain_high[1])
-                        self.node.send_set_variables(adjust_speed)
+            if extermity_sens[0] >= self.lower_threshold:
+                adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
+                                           -self.motor_speed_right - gain_mid[1])
+                self.node.send_set_variables(adjust_speed)
 
-                    elif extermity_sens[i] and mid_extermity_sens[i] >= self.upper_threshold:
-                        if i == 0:
-                            adjust_speed = self.motors(self.motor_speed_left + gain_high[0],
-                                                       -self.motor_speed_right - gain_high[1])
-                        else:
-                            adjust_speed = self.motors(-self.motor_speed_left - gain_high[0],
-                                                       self.motor_speed_right + gain_high[1])
-                        self.node.send_set_variables(adjust_speed)
+            if extermity_sens[1] >= self.lower_threshold:
+                print("activated")
+                adjust_speed = self.motors(-self.motor_speed_left - gain_mid[0],
+                                           +self.motor_speed_right + gain_mid[1])
+                self.node.send_set_variables(adjust_speed)
 
-            if mid_extermity_sens[0] or mid_extermity_sens[1] >= self.lower_threshold:
-                for i in range(2):
-                    print("hi there")
-                    if extermity_sens[i]  <= self.upper_threshold:
-                        print("hi there 2", extermity_sens)
-                        adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
-                                                   self.motor_speed_right + gain_mid[1])
-                        self.node.send_set_variables(adjust_speed)
-                    elif extermity_sens[i] >= self.upper_threshold:
-                        if i == 0:
-                            print("hi there left", extermity_sens)
-                            adjust_speed = self.motors(-self.motor_speed_left,
-                                                       -self.motor_speed_right - gain_high[0])
-                        else:
-                            print("hi there right", extermity_sens)
-                            adjust_speed = self.motors(-self.motor_speed_left - gain_high[1],
-                                                       -self.motor_speed_right )
-                        self.node.send_set_variables(adjust_speed)
+            if mid_extermity_sens[0] >= self.lower_threshold:
+                if extermity_sens[0] <= self.middle_threshold:
+                    print("hi there 2", extermity_sens)
+                    adjust_speed = self.motors(self.motor_speed_left + gain_mid[0],
+                                               -self.motor_speed_right - gain_mid[1])
+                    self.node.send_set_variables(adjust_speed)
+                elif extermity_sens[0] >= self.middle_threshold:
+                    print("hi there left", extermity_sens)
+                    adjust_speed = self.motors(-self.motor_speed_left,
+                                               -self.motor_speed_right - gain_high[0])
+                    self.node.send_set_variables(adjust_speed)
+
+            if mid_extermity_sens[1] >= self.lower_threshold:
+                if extermity_sens[1] <= self.middle_threshold:
+                    print("hi there 2", extermity_sens)
+                    adjust_speed = self.motors(-self.motor_speed_left - gain_mid[0],
+                                               self.motor_speed_right + gain_mid[1])
+                    self.node.send_set_variables(adjust_speed)
+
+                elif extermity_sens[1] >= self.middle_threshold:
+                    print("hi there right", extermity_sens)
+                    adjust_speed = self.motors(-self.motor_speed_left - gain_high[1],
+                                               -self.motor_speed_right)
+
             if self.lower_threshold <= middle_sensor <= self.middle_threshold:
                 if mid_extermity_sens[0] <= mid_extermity_sens[1]:
                     adjust_speed = self.motors(-self.motor_speed_left - gain[0],
