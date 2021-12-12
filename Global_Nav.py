@@ -1,10 +1,10 @@
 from tdmclient import ClientAsync
 import cv2 as cv
 import numpy as np
-from pyzbar.pyzbar import decode
+# from pyzbar.pyzbar import decode
 import Polygon as poly
 import video as vd
-import extremitypathfinder_master.extremitypathfinder as EXTRE
+# import extremitypathfinder_master.extremitypathfinder as EXTRE
 
 
 class Global_Nav():

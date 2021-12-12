@@ -36,7 +36,8 @@ class Local_Nav:
     def analyse_data(self):
         prox_sens_data = self.get_sensor_data()
 
-        if prox_sens_data == [0, 0, 0, 0, 0, 0, 0]:
+        if prox_sens_data <= [ self.lower_threshold,  self.lower_threshold,  self.lower_threshold,  self.lower_threshold,
+                               self.lower_threshold,  self.lower_threshold,  self.lower_threshold]:
             self.colour2(2)
             flag = 0
             return flag
@@ -125,7 +126,6 @@ class Local_Nav:
                         adjust_speed = self.motors(-self.motor_speed_left - gain_high[0],
                                                    -2 * self.motor_speed_right - 2 * gain_high[1])
                     self.node.send_set_variables(adjust_speed)
-
 
     def motors(self, motor_speed_left, motor_speed_right):
         if motor_speed_left >= 500:
@@ -216,6 +216,16 @@ class Local_Nav:
         obstacles_pos = [[x[0] + dx, x[1] + dy] for (x, dx, dy) in
                          zip(sensor_pos_from_center, dx_from_sensor, dy_from_sensor)]
         return np.array(obstacles_pos)
+
+    def rotate(self, angle, coords):
+        """
+        Rotates the coordinates of a matrix by the desired angle
+        :param angle: angle in radians by which we want to rotate
+        :return: numpy.array() that contains rotated coordinates
+        """
+        R = np.array(((np.cos(angle), -np.sin(angle)),
+                      (np.sin(angle), np.cos(angle))))
+        return R.dot(coords.transpose()).transpose()
 
     def local_occupancy(self):
         pass
