@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from local_occupancy import sensor_measurements, sensor_distances
-from local_occupancy import thymio_coords, sensor_pos_from_center, sensor_angles
+
+
 
 
 # client = ClientAsync()
@@ -193,7 +193,7 @@ class Local_Nav:
         for (local_grid, pos) in zip(local_occupancy_grids, abs_pos):
             # Rotate the local occupancy grid
             rotated_grid = self.rotate(pos[2] - math.pi / 2, local_grid)
-            rotated_thymio_coords = self.rotate(pos[2] - math.pi / 2, thymio_coords)
+            rotated_thymio_coords = self.rotate(pos[2] - math.pi / 2, self.thymio_coords)
 
             # Translate the grid at the position of the Thymio
             obstacles_pos = rotated_grid + np.array([pos[0], pos[1]])
