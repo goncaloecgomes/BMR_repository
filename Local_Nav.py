@@ -67,21 +67,21 @@ class Local_Nav:
         if flag == 1:
             if extermity_sens[0] or mid_extermity_sens[0] >= self.lower_threshold:
                 adjust_speed = self.motors(self.motor_speed_left, #+ gain_low[0],
-                                           -self.motor_speed_right - gain_low[1])
+                                           self.motor_speed_right - gain_low[0])
                 self.node.send_set_variables(adjust_speed)
 
             elif extermity_sens[1] or mid_extermity_sens[1] >= self.lower_threshold:
-                adjust_speed = self.motors(-self.motor_speed_left - gain_low[0],
+                adjust_speed = self.motors(self.motor_speed_left - gain_low[1],
                                            + self.motor_speed_right) # + gain_low[1])
                 self.node.send_set_variables(adjust_speed)
 
-            elif self.lower_threshold <= middle_sensor <= self.middle_threshold:
+            elif self.middle_threshold <= middle_sensor <= self.upper_threshold:
                 if mid_extermity_sens[0] <= mid_extermity_sens[1]:
-                    adjust_speed = self.motors(-self.motor_speed_left - gain_low[0],
+                    adjust_speed = self.motors(-self.motor_speed_left,# - gain_low[0],
                                                self.motor_speed_right + gain_low[1])
                 else:
                     adjust_speed = self.motors(self.motor_speed_left + gain_low[0],
-                                                -self.motor_speed_right - gain_low[1])
+                                                -self.motor_speed_right)# - gain_low[1])
                 self.node.send_set_variables(adjust_speed)
 
             # elif middle_sensor >= self.lower_threshold and mid_extermity_sens[0] >= self.lower_threshold:
